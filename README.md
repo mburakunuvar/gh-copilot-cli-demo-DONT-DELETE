@@ -1,35 +1,27 @@
-# ghcp-in-action
+# Customize GitHub Copilot CLI
 
-A hands-on quick demo showcasing **GitHub Copilot** working across three developer surfaces — the GitHub web UI, your IDE, and your terminal — to build, review, and deploy a mini web application about GitHub Copilot itself.
+A hands-on demo showcasing **GitHub Copilot CLI** building, deploying, and managing a mini web application — driven entirely by GitHub Issues and powered by Copilot CLI fleet mode.
 
 ---
 
 ## About This Demo
 
-This demo walks through a realistic developer workflow driven entirely by GitHub Issues. Each issue is assigned to the Copilot tool best suited for the job, demonstrating how the different surfaces complement each other rather than overlap.
+This demo walks through a realistic developer workflow driven entirely by GitHub Issues. Issues 2–7 can be assigned to Copilot CLI simultaneously via **fleet mode**, with each issue handled by a parallel subagent. Once all pages are built, an automated workflow triggers deployment to Azure.
 
 By the end of the demo, a small web app has been:
-- **Built** (home page, primitives page, APE page)
-- **Reviewed** by two AI models with findings filed as new issues
-- **Deployed** to Azure via an AI-generated GitHub Actions workflow
+- **Built** (home page + five child pages covering Copilot CLI customization topics)
+- **Deployed** to Azure Container Apps via CI/CD
 
 ### Content Pages
 
 | Page | Topic | Source |
 |---|---|---|
-| **Home** (`index.html`) | GitHub Copilot Across Surfaces — the four surfaces at a glance | [dailydoseofghcp.com](https://www.dailydoseofghcp.com/posts/ghcp-across-multiple-surfaces.html) |
-| **Primitives** (`primitives.html`) | The 8 Primitives of GitHub Copilot Customization | [microsoftnorman/customize-your-repo-with-github-copilot](https://github.com/microsoftnorman/customize-your-repo-with-github-copilot) |
-| **APE** (`ape.html`) | Agentic Platform Engineering with GitHub Copilot (Git-Ape) | [Azure/git-ape](https://github.com/Azure/git-ape) |
-
----
-
-## GitHub Copilot Surfaces
-
-| Tool | Where | Best for |
-|---|---|---|
-| **GitHub Coding Agent** | GitHub.com (Issues / PRs) | Async, cloud-based coding tasks kicked off from an issue |
-| **Agent Mode** | IDE (VS Code) | Interactive, local workspace tasks with real-time iteration |
-| **Copilot CLI** | Terminal | Shell commands, DevOps tasks, and quick code tasks without leaving the terminal |
+| **Home** (`index.html`) | Customize GitHub Copilot CLI — overview with navigation to all child pages | — |
+| **Custom Instructions** (`custominstructions.html`) | Adding custom instructions for Copilot CLI | [GitHub Docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions) |
+| **Skills** (`skills.html`) | Adding agent skills for Copilot CLI | [GitHub Docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills) |
+| **Custom Agents** (`customagents.html`) | Creating and using custom agents for Copilot CLI | [GitHub Docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli) |
+| **MCP Servers** (`mcp.html`) | Adding MCP servers for Copilot CLI | [GitHub Docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers) |
+| **Hooks** (`hooks.html`) | Adding hooks for Copilot CLI | [GitHub Docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-hooks) |
 
 ---
 
@@ -37,9 +29,8 @@ By the end of the demo, a small web app has been:
 
 Before running this demo, make sure the following are in place:
 
-- A GitHub repository with **7 issues** (see [Getting Started](#getting-started) below to create them)
+- A GitHub repository with **9 issues** (see [Getting Started](#getting-started) below to create them)
 - **GitHub Copilot** enabled on the account and the repository
-- **VS Code** with the repo cloned locally and Agent Mode enabled
 - **Copilot CLI** installed and authenticated — verify with `gh auth status`
 
 > 🎬 **The live demo starts at Issue 1.** All issues are worked through during the demo.
@@ -48,7 +39,7 @@ Before running this demo, make sure the following are in place:
 
 ## Getting Started
 
-After creating a new repo from this template, the **7 demo issues are not created automatically** — GitHub does not trigger workflows on the initial commit from a template.
+After creating a new repo from this template, the **9 demo issues are not created automatically** — GitHub does not trigger workflows on the initial commit from a template.
 
 Run this command once to seed all issues and labels:
 
@@ -69,107 +60,91 @@ gh issue list --repo <owner>/<your-new-repo>
 ## Demo Scenarios
 
 ### Issue 1 — Azure Container Apps Setup
-**Tool**: Azure Portal / az CLI &nbsp;|&nbsp; **Surface**: Azure Portal
+**Label**: `init-demo`
 
 Create Azure Container Registry and Container Apps resources, add deployment secrets, and verify the live URL. The deployment workflow is `workflow_dispatch` only — trigger it manually after setup to deploy the container.
 
 ---
 
 ### Issue 2 — Scaffold and Beautify the Home Page
-**Tool**: GitHub Coding Agent &nbsp;|&nbsp; **Surface**: GitHub.com
+**Label**: `copilot-cli`
 
-Copilot is assigned the issue directly from the GitHub Issues UI. The blank `index.html` already exists — the agent scaffolds and beautifies it as a **GitHub Copilot Across Surfaces** overview with a brief introduction to the four surfaces (GitHub.com, IDE, CLI, SDK) and two navigation buttons linking to `primitives.html` and `ape.html`. The agent opens a draft PR with its changes.
-
----
-
-### Issue 3 — Primitives Page
-**Tool**: Copilot CLI &nbsp;|&nbsp; **Surface**: Terminal
-
-From the terminal, Copilot CLI scaffolds the Primitives child page using a natural language prompt. The page covers the eight primitives of GitHub Copilot customization. The suggestion is reviewed, executed, and committed — without ever leaving the command line.
-
-```sh
-gh copilot suggest "scaffold a Primitives child page based on the structure in index.html using template-primitives.txt"
-```
+Scaffold and beautify `index.html` as a **Customize GitHub Copilot CLI** overview page with five navigation buttons linking to the child pages (Custom Instructions, Skills, Custom Agents, MCP Servers, Hooks).
 
 ---
 
-### Issue 4 — Agentic Platform Engineering Page
-**Tool**: Agent Mode &nbsp;|&nbsp; **Surface**: IDE (VS Code)
+### Issue 3 — Custom Instructions Page
+**Label**: `copilot-cli`
 
-In VS Code, Agent Mode reads the existing page structure and builds a matching APE (Agentic Platform Engineering) child page. The page covers Git-Ape — a multi-agent platform engineering framework built on GitHub Copilot for planning, validating, and deploying Azure infrastructure. The agent inspects files, proposes edits inline, and can run a local preview to verify the result.
-
----
-
-### Issue 5 — Azure Deployment
-**Tool**: Agent Mode &nbsp;|&nbsp; **Surface**: IDE (VS Code)
-
-> **⚠️ Prerequisite**: Issues #1 (Azure Container Apps Setup), #2 (Home Page), #3 (Primitives Page), and #4 (APE Page) must be closed before deployment. Code Review happens after this step.
-
-Agent Mode confirms Issues 1–4 are closed, checks the existing `.github/workflows/azure-container-apps.yml` workflow, triggers the deployment, and the audience sees the fully built app at the live URL.
+Build a child page for adding custom instructions for GitHub Copilot CLI. Follows the same structure and style as the home page.
 
 ---
 
-### Issue 6 — Code Review & Performance
-**Tool**: Copilot CLI &nbsp;|&nbsp; **Surface**: Terminal
+### Issue 4 — Skills Page
+**Label**: `copilot-cli`
 
-Copilot CLI reviews the live deployed app for code quality and performance:
-
-1. **Code quality review** — best practices, error handling, accessibility
-2. **Performance review** — asset optimization, render-blocking resources, caching
-
-The findings are filed as four new GitHub issues using `gh issue create`:
-- Fix: missing alt attributes and semantic HTML
-- Fix: render-blocking CSS and missing meta tags
-- Write and run unit tests for the application
-- Deploy latest version to Azure
-
-After filing the issues, Copilot CLI generates a `suggested_improvements.md` report in the repo root summarizing all findings and recommendations.
+Build a child page for adding agent skills for GitHub Copilot CLI. Follows the same structure and style as the home page.
 
 ---
 
-### Fix: missing alt attributes and semantic HTML *(auto-created)*
-**Created by**: Copilot CLI during Issue 6 &nbsp;|&nbsp; **Addressed by**: GitHub Coding Agent
+### Issue 5 — Custom Agents Page
+**Label**: `copilot-cli`
 
-Tracks code quality findings surfaced by the review.
-
----
-
-### Fix: render-blocking CSS and missing meta tags *(auto-created)*
-**Created by**: Copilot CLI during Issue 6 &nbsp;|&nbsp; **Addressed by**: GitHub Coding Agent
-
-Tracks performance findings surfaced by the review.
+Build a child page for creating and using custom agents for GitHub Copilot CLI. Follows the same structure and style as the home page.
 
 ---
 
-### Write and run unit tests *(auto-created)*
-**Created by**: Copilot CLI during Issue 6
+### Issue 6 — MCP Servers Page
+**Label**: `copilot-cli`
 
-Write and execute unit tests for the application.
+Build a child page for adding MCP servers for GitHub Copilot CLI. Follows the same structure and style as the home page.
 
 ---
 
-### Deploy latest version to Azure *(auto-created)*
-**Created by**: Copilot CLI during Issue 6
+### Issue 7 — Hooks Page
+**Label**: `copilot-cli`
 
-Trigger the existing Azure Container Apps workflow to deploy the updated application.
+Build a child page for adding hooks for GitHub Copilot CLI. Follows the same structure and style as the home page.
+
+---
+
+### Issue 8 — Azure Deployment
+**Label**: `copilot-cli`
+
+> **⚠️ Prerequisite**: Issues #2–#7 (all page issues) must be closed before deployment. Issue #1 (Azure Container Apps Setup) must be completed first.
+
+Verify all page issues are closed, then trigger the deployment workflow. The `auto-deploy.yml` workflow can also trigger this automatically when the last page issue is closed.
+
+---
+
+### Issue 9 — Clean Up Azure Resources
+**Label**: `post-demo`
+
+After the demo is complete, delete all Azure resources (Resource Group, Container App, Container Registry) to avoid unnecessary costs.
+
+---
+
+## Fleet Mode & Auto-Deploy
+
+Issues 2–7 can be assigned to Copilot CLI simultaneously via **fleet mode**. Each issue is handled by a parallel subagent, building all six pages concurrently.
+
+The `auto-deploy.yml` workflow watches for issue closures. When all six page issues (2–7) are closed, it automatically triggers the Azure Container Apps CI/CD deployment — no manual intervention needed for Issue 8.
 
 ---
 
 ## Quick Reference
 
-| Issue | Task | Tool | Surface |
-|---|---|---|---|
-| 1 | Azure Container Apps Setup | Azure Portal / az CLI | Azure Portal |
-| 2 | Scaffold & Beautify Home Page | GitHub Coding Agent | GitHub.com |
-| 3 | Primitives Page | Copilot CLI | Terminal |
-| 4 | Agentic Platform Engineering Page | Agent Mode | IDE |
-| 5 | Azure Deployment | Agent Mode | IDE |
-| 6 | Code Review & Performance | Copilot CLI | Terminal |
-| 7 | Clean Up Azure Resources | — | Azure Portal |
-| *(auto-created)* | Fix: missing alt attributes and semantic HTML | GitHub Coding Agent | GitHub.com |
-| *(auto-created)* | Fix: render-blocking CSS and missing meta tags | GitHub Coding Agent | GitHub.com |
-| *(auto-created)* | Write and run unit tests | — | — |
-| *(auto-created)* | Deploy latest version to Azure | — | — |
+| Issue | Task | Label |
+|---|---|---|
+| 1 | Azure Container Apps Setup | `init-demo` |
+| 2 | Scaffold & Beautify Home Page | `copilot-cli` |
+| 3 | Custom Instructions Page | `copilot-cli` |
+| 4 | Skills Page | `copilot-cli` |
+| 5 | Custom Agents Page | `copilot-cli` |
+| 6 | MCP Servers Page | `copilot-cli` |
+| 7 | Hooks Page | `copilot-cli` |
+| 8 | Azure Deployment | `copilot-cli` |
+| 9 | Clean Up Azure Resources | `post-demo` |
 
 ---
 
@@ -178,11 +153,16 @@ Trigger the existing Azure Container Apps workflow to deploy the updated applica
 | File | Description |
 |---|---|
 | `README.md` | This file |
-| `index.html` | Blank home page scaffold — GitHub Copilot Across Surfaces |
-| `primitives.html` | Blank primitives page scaffold — The 8 Customization Primitives |
-| `ape.html` | Blank APE page scaffold — Agentic Platform Engineering |
-| `template-primitives.txt` | Primitives content template (referenced by Issue #3) |
-| `template-ape.txt` | APE content template (referenced by Issue #4) |
+| `Dockerfile` | Container image definition for Azure Container Apps deployment |
+| `index.html` | Home page — Customize GitHub Copilot CLI overview |
+| `custominstructions.html` | Child page — Custom Instructions |
+| `skills.html` | Child page — Skills |
+| `customagents.html` | Child page — Custom Agents |
+| `mcp.html` | Child page — MCP Servers |
+| `hooks.html` | Child page — Hooks |
 | `template-azureapp.md` | Reusable runbook for Azure Container Apps setup (Issue #1) |
+| `azure_resource.md` | Azure resource details (filled in during Issue #1) |
 | `.github/workflows/setup-issues.yml` | Creates issues and labels — trigger manually after using the template (see [Getting Started](#getting-started)) |
 | `.github/workflows/azure-container-apps.yml` | Manual-trigger deployment to Azure Container Apps |
+| `.github/workflows/auto-deploy.yml` | Auto-triggers deployment when all page issues (2–7) are closed |
+| `.github/agents/aca-infra-auditor.agent.md` | Custom agent for auditing Azure Container Apps deployments |

@@ -61,13 +61,16 @@ jobs:
 
           APP_EXISTS=$(az containerapp show --name "$AZURE_CONTAINERAPP_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --query name -o tsv 2>/dev/null || echo "")
           if [[ -n "$APP_EXISTS" ]]; then
+            az containerapp registry set \
+              --name "$AZURE_CONTAINERAPP_NAME" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --server "$ACR_LOGIN_SERVER" \
+              --username "$ACR_USERNAME" \
+              --password "$ACR_PASSWORD"
             az containerapp update \
               --name "$AZURE_CONTAINERAPP_NAME" \
               --resource-group "$AZURE_RESOURCE_GROUP" \
-              --image "$IMAGE" \
-              --registry-server "$ACR_LOGIN_SERVER" \
-              --registry-username "$ACR_USERNAME" \
-              --registry-password "$ACR_PASSWORD"
+              --image "$IMAGE"
           else
             az containerapp create \
               --name "$AZURE_CONTAINERAPP_NAME" \
