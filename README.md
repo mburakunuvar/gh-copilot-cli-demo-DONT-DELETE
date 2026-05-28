@@ -68,10 +68,10 @@ gh issue list --repo <owner>/<your-new-repo>
 
 ## Demo Scenarios
 
-### Issue 1 — Azure Static Web App Setup
+### Issue 1 — Azure Container Apps Setup
 **Tool**: Azure Portal / az CLI &nbsp;|&nbsp; **Surface**: Azure Portal
 
-Create an Azure Static Web App, connect it to the repo, add `AZURE_STATIC_WEB_APPS_API_TOKEN` to repo secrets, and verify the live URL. The deployment workflow is `workflow_dispatch` only — trigger it manually after setup to deploy the blank pages.
+Create Azure Container Registry and Container Apps resources, add deployment secrets, and verify the live URL. The deployment workflow is `workflow_dispatch` only — trigger it manually after setup to deploy the container.
 
 ---
 
@@ -103,9 +103,9 @@ In VS Code, Agent Mode reads the existing page structure and builds a matching A
 ### Issue 5 — Azure Deployment
 **Tool**: Agent Mode &nbsp;|&nbsp; **Surface**: IDE (VS Code)
 
-> **⚠️ Prerequisite**: Issues #1 (Azure Static Web App Setup), #2 (Home Page), #3 (Primitives Page), and #4 (APE Page) must be closed before deployment. Code Review happens after this step.
+> **⚠️ Prerequisite**: Issues #1 (Azure Container Apps Setup), #2 (Home Page), #3 (Primitives Page), and #4 (APE Page) must be closed before deployment. Code Review happens after this step.
 
-Agent Mode confirms Issues 1–4 are closed, checks the existing `.github/workflows/azure-static-web-apps.yml` workflow, triggers the deployment, and the audience sees the fully built app at the live URL.
+Agent Mode confirms Issues 1–4 are closed, checks the existing `.github/workflows/azure-container-apps.yml` workflow, triggers the deployment, and the audience sees the fully built app at the live URL.
 
 ---
 
@@ -151,7 +151,7 @@ Write and execute unit tests for the application.
 ### Deploy latest version to Azure *(auto-created)*
 **Created by**: Copilot CLI during Issue 6
 
-Trigger the existing Azure Static Web Apps workflow to deploy the updated application.
+Trigger the existing Azure Container Apps workflow to deploy the updated application.
 
 ---
 
@@ -159,7 +159,7 @@ Trigger the existing Azure Static Web Apps workflow to deploy the updated applic
 
 | Issue | Task | Tool | Surface |
 |---|---|---|---|
-| 1 | Azure Static Web App Setup | Azure Portal / az CLI | Azure Portal |
+| 1 | Azure Container Apps Setup | Azure Portal / az CLI | Azure Portal |
 | 2 | Scaffold & Beautify Home Page | GitHub Coding Agent | GitHub.com |
 | 3 | Primitives Page | Copilot CLI | Terminal |
 | 4 | Agentic Platform Engineering Page | Agent Mode | IDE |
@@ -183,6 +183,6 @@ Trigger the existing Azure Static Web Apps workflow to deploy the updated applic
 | `ape.html` | Blank APE page scaffold — Agentic Platform Engineering |
 | `template-primitives.txt` | Primitives content template (referenced by Issue #3) |
 | `template-ape.txt` | APE content template (referenced by Issue #4) |
-| `template-azureapp.md` | Reusable runbook for Azure Static Web App setup (Issue #1) |
+| `template-azureapp.md` | Reusable runbook for Azure Container Apps setup (Issue #1) |
 | `.github/workflows/setup-issues.yml` | Creates issues and labels — trigger manually after using the template (see [Getting Started](#getting-started)) |
-| `.github/workflows/azure-static-web-apps.yml` | Manual-trigger deployment to Azure Static Web Apps |
+| `.github/workflows/azure-container-apps.yml` | Manual-trigger deployment to Azure Container Apps |

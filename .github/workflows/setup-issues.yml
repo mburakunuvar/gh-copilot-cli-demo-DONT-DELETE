@@ -26,7 +26,7 @@ jobs:
       - name: Check if demo issues already exist
         id: check
         run: |
-          FOUND=$(gh issue list --repo "$REPO" --state all --search "Azure Static Web App Setup in:title" --json number --jq 'length')
+          FOUND=$(gh issue list --repo "$REPO" --state all --search "Azure Container Apps Setup in:title" --json number --jq 'length')
           if [ "$FOUND" -gt 0 ]; then
             echo "Demo issues already exist. To re-create, close/delete existing demo issues first."
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -34,63 +34,72 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Issue 1 — Azure Static Web App Setup
+      - name: Issue 1 — Azure Container Apps Setup
         if: steps.check.outputs.skip == 'false'
         run: |
           cat > /tmp/body.md <<'EOF'
           ## Task
-          Create an Azure Static Web App and deploy the repo to it.
+          Deploy this repo as one container running on Azure Container Apps.
 
           ### Steps
           1. `az login`
           2. `az group create --name <rg-name> --location <region>`
-          3. `az staticwebapp create --name <app-name> --resource-group <rg-name> --location <region> --sku Free`
-             > The repo already contains `.github/workflows/azure-static-web-apps.yml`. Do **not** use `--login-with-github` (it would create a second workflow and a randomly-named secret).
-          4. `az staticwebapp secrets list --name <app-name> --resource-group <rg-name> --query "properties.apiKey" -o tsv`
-          5. `gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body "<token>"`
-          6. `gh workflow run "Azure Static Web Apps CI/CD"`
-          7. Verify the live URL: `az staticwebapp show --name <app-name> --resource-group <rg-name> --query "defaultHostname" -o tsv`
+          3. `az acr create --name <acr-name> --resource-group <rg-name> --sku Basic`
+          4. `az containerapp env create --name <env-name> --resource-group <rg-name> --location <region>`
+          5. Set these repository secrets:
+             - `AZURE_CLIENT_ID`
+             - `AZURE_TENANT_ID`
+             - `AZURE_SUBSCRIPTION_ID`
+             - `AZURE_CLIENT_SECRET`
+             - `ACR_LOGIN_SERVER` from `az acr show --name <acr-name> --resource-group <rg-name> --query loginServer -o tsv`
+             - `ACR_USERNAME` from `az acr credential show --name <acr-name> --resource-group <rg-name> --query username -o tsv`
+             - `ACR_PASSWORD` from `az acr credential show --name <acr-name> --resource-group <rg-name> --query passwords[0].value -o tsv`
+             - `AZURE_RESOURCE_GROUP` set to `<rg-name>`
+             - `AZURE_CONTAINERAPP_NAME` set to `<app-name>`
+             - `AZURE_CONTAINERAPPS_ENVIRONMENT` set to `<env-name>`
+          6. `gh workflow run "Azure Container Apps CI/CD"`
+          7. Verify the live URL: `az containerapp show --name <app-name> --resource-group <rg-name> --query "properties.configuration.ingress.fqdn" -o tsv`
           8. Update `azure_resource.md` with the actual resource details, commit and push.
           EOF
           sed -i 's/^          //' /tmp/body.md
-          gh issue create --repo "$REPO" --label "init-demo" --title "Azure Static Web App Setup" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --label "init-demo" --title "Azure Container Apps Setup" --body-file /tmp/body.md
 
       - name: Issue 2 — Scaffold and Beautify the Home Page
         if: steps.check.outputs.skip == 'false'
         run: |
           cat > /tmp/body.md <<'EOF'
           ## Task
-          Scaffold and beautify the existing `index.html` as a **GitHub Copilot Across Surfaces** overview page with:
-          - Title: **GitHub Copilot Across Surfaces**
-          - A brief introduction explaining the four Copilot surfaces (GitHub.com, IDE, CLI, SDK)
-          - Two navigation buttons that link to the child pages:
-            - **Primitives** → `primitives.html`
-            - **Agentic Platform Engineering** → `ape.html`
+          Scaffold and beautify the existing `index.html` as a **Customize GitHub Copilot CLI** overview page with:
+          - Title: **Customize GitHub Copilot CLI**
+          - Copilot CLI works best when customized for your specific project and workflow.
+          - Five navigation buttons linking to:
+            1. **Custom Instructions** → `custominstructions.html`
+            2. **Skills** → `skills.html`
+            3. **Custom Agents** → `customagents.html`
+            4. **MCP Servers** → `mcp.html`
+            5. **Hooks** → `hooks.html`
 
-          Source reference: https://www.dailydoseofghcp.com/posts/ghcp-across-multiple-surfaces.html
-
-          The blank HTML files (`index.html`, `primitives.html`, `ape.html`) already exist in the repo — no need to create the folder structure.
+          The HTML files (`index.html`, `custominstructions.html`, `skills.html`, `customagents.html`, `mcp.html`, `hooks.html`) already exist in the repo — no need to create the folder structure.
 
           ## Assigned to
-          GitHub Coding Agent — assign this issue to Copilot via the Assignees panel on GitHub.com.
+          GitHub Copilot CLI
           EOF
           sed -i 's/^          //' /tmp/body.md
-          gh issue create --repo "$REPO" --label "coding-agent" --title "Scaffold and Beautify the Home Page" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --label "copilot-cli" --title "Scaffold and Beautify the Home Page" --body-file /tmp/body.md
 
-      - name: Issue 3 — Primitives Page
+      - name: Issue 3 — Custom Instructions Page
         if: steps.check.outputs.skip == 'false'
         run: |
           cat > /tmp/body.md <<'EOF'
           ## Task
-          Build a child page for the GitHub Copilot Customization Primitives.
+          Build a child page for adding custom instructions for GitHub Copilot CLI.
 
-          The page should follow the same structure and style as the home page (`index.html`).
-          Use `template-primitives.txt` in the repo root for the content — the eight primitives of GitHub Copilot customization.
-
-          Source reference: https://github.com/microsoftnorman/customize-your-repo-with-github-copilot
+          - Title: **Custom Instructions for GitHub Copilot CLI**
+          - The page should follow the same structure and style as the home page (`index.html`).
+          - Use https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions for content.
 
           ## Assigned to
-          Copilot CLI — use `gh copilot suggest` from the terminal to scaffold this page.
+          GitHub Copilot CLI
 
           ## Completion
           Once the page is built:
@@ -100,98 +109,134 @@ jobs:
           4. Close this issue from the GitHub UI or with `gh issue close <this-issue-number>`
           EOF
           sed -i 's/^          //' /tmp/body.md
-          gh issue create --repo "$REPO" --label "copilot-cli" --title "Primitives Page" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --label "copilot-cli" --title "Custom Instructions Page" --body-file /tmp/body.md
 
-      - name: Issue 4 — Agentic Platform Engineering Page
+      - name: Issue 4 — Skills Page
         if: steps.check.outputs.skip == 'false'
         run: |
           cat > /tmp/body.md <<'EOF'
           ## Task
-          Build a child page for Agentic Platform Engineering (APE).
+          Build a child page for adding agent skills for GitHub Copilot CLI.
 
-          The page should follow the same structure and style as the home page and Primitives page.
-          Use `template-ape.txt` in the repo root for the content — the Git-Ape multi-agent framework (deployment flow, agents, skills, execution modes).
-
-          Source reference: https://github.com/Azure/git-ape
+          - Title: **Adding Agent Skills for GitHub Copilot CLI**
+          - The page should follow the same structure and style as the home page (`index.html`).
+          - Use https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills for content.
 
           ## Assigned to
-          Agent Mode in IDE (VS Code) — use Copilot Chat in Agent Mode, referencing the existing pages for structure.
+          GitHub Copilot CLI
 
           ## Completion
-          When the APE page is complete:
+          Once the page is built:
           1. Commit the changes
           2. Pull and rebase from remote: `git pull --rebase origin main`
-          3. Resolve any merge conflicts if they arise
-          4. Push to remote: `git push origin main`
-          5. Close this issue from the GitHub UI or with `gh issue close <this-issue-number>`
+          3. Push to remote: `git push origin main`
+          4. Close this issue from the GitHub UI or with `gh issue close <this-issue-number>`
           EOF
           sed -i 's/^          //' /tmp/body.md
-          gh issue create --repo "$REPO" --label "agent-mode" --title "Agentic Platform Engineering Page" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --label "copilot-cli" --title "Skills Page" --body-file /tmp/body.md
 
-      - name: Issue 5 — Azure Deployment
+      - name: Issue 5 — Custom Agents Page
         if: steps.check.outputs.skip == 'false'
         run: |
           cat > /tmp/body.md <<'EOF'
           ## Task
-          The application is already deployed to Azure Static Web Apps and a CI/CD workflow is in place (`.github/workflows/azure-static-web-apps.yml`).
+          Build a child page for creating and using custom agents for GitHub Copilot CLI.
 
-          > ⚠️ **Important**: The workflow only triggers on `workflow_dispatch` — **not on push**. Do NOT push to remote expecting a deployment. Trigger it manually with:
+          - Title: **Creating and Using Custom Agents for GitHub Copilot CLI**
+          - The page should follow the same structure and style as the home page (`index.html`).
+          - Use https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli for content.
+
+          ## Assigned to
+          GitHub Copilot CLI
+
+          ## Completion
+          Once the page is built:
+          1. Commit the changes
+          2. Pull and rebase from remote: `git pull --rebase origin main`
+          3. Push to remote: `git push origin main`
+          4. Close this issue from the GitHub UI or with `gh issue close <this-issue-number>`
+          EOF
+          sed -i 's/^          //' /tmp/body.md
+          gh issue create --repo "$REPO" --label "copilot-cli" --title "Custom Agents Page" --body-file /tmp/body.md
+
+      - name: Issue 6 — MCP Servers Page
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          cat > /tmp/body.md <<'EOF'
+          ## Task
+          Build a child page for adding MCP servers for GitHub Copilot CLI.
+
+          - Title: **Adding MCP Servers for GitHub Copilot CLI**
+          - The page should follow the same structure and style as the home page (`index.html`).
+          - Use https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers for content.
+
+          ## Assigned to
+          GitHub Copilot CLI
+
+          ## Completion
+          Once the page is built:
+          1. Commit the changes
+          2. Pull and rebase from remote: `git pull --rebase origin main`
+          3. Push to remote: `git push origin main`
+          4. Close this issue from the GitHub UI or with `gh issue close <this-issue-number>`
+          EOF
+          sed -i 's/^          //' /tmp/body.md
+          gh issue create --repo "$REPO" --label "copilot-cli" --title "MCP Servers Page" --body-file /tmp/body.md
+
+      - name: Issue 7 — Hooks Page
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          cat > /tmp/body.md <<'EOF'
+          ## Task
+          Build a child page for adding hooks for GitHub Copilot CLI.
+
+          - Title: **Adding Hooks for GitHub Copilot CLI**
+          - The page should follow the same structure and style as the home page (`index.html`).
+          - Use https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-hooks for content.
+
+          ## Assigned to
+          GitHub Copilot CLI
+
+          ## Completion
+          Once the page is built:
+          1. Commit the changes
+          2. Pull and rebase from remote: `git pull --rebase origin main`
+          3. Push to remote: `git push origin main`
+          4. Close this issue from the GitHub UI or with `gh issue close <this-issue-number>`
+          EOF
+          sed -i 's/^          //' /tmp/body.md
+          gh issue create --repo "$REPO" --label "copilot-cli" --title "Hooks Page" --body-file /tmp/body.md
+
+      - name: Issue 8 — Azure Deployment
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          cat > /tmp/body.md <<'EOF'
+          ## Task
+          The application is deployed to Azure Container Apps and a CI/CD workflow is in place (`.github/workflows/azure-container-apps.yml`).
+
+          > ⚠️ **Important**: The workflow only triggers on `workflow_dispatch` — **not on push**. Trigger manually with:
           > ```bash
-          > gh workflow run "Azure Static Web Apps CI/CD"
+          > gh workflow run "Azure Container Apps CI/CD"
           > ```
 
           For this step:
-          1. Confirm the **Azure Static Web App Setup**, **Home Page**, **Primitives Page**, and **APE Page** issues are closed
+          1. Confirm the **Home Page**, **Custom Instructions**, **Skills**, **Custom Agents**, **MCP Servers**, and **Hooks** issues are closed
           2. Verify the latest changes are live at the deployed URL
           3. If anything needs to be re-triggered, trigger the workflow manually using the command above
 
-          > ⚠️ **Prerequisite**: The **Home Page**, **Primitives**, and **APE** issues must be closed before deployment. The **Code Review and Performance** issue happens after this step.
+          ## Pre-flight requirement
+          The **Azure Container Apps Setup** issue must be completed first (environment created, deployment secrets added).
 
           ## Assigned to
-          Agent Mode in IDE (VS Code) — prompt: *'The Home Page, Primitives, and APE issues are resolved. Verify the app is deployed and the live site reflects all the latest changes. Trigger a re-deployment if needed.'*
-
-          ## Pre-flight requirement
-          The presenter must have already completed the **Azure Static Web App Setup** issue:
-          - Azure Static Web App created and connected to this repository
-          - `AZURE_STATIC_WEB_APPS_API_TOKEN` added to the repository secrets
+          GitHub Copilot CLI
 
           ## Completion
           Once deployment is verified and the live site is confirmed working, close this issue from the GitHub UI or with `gh issue close <this-issue-number>`.
           EOF
           sed -i 's/^          //' /tmp/body.md
-          gh issue create --repo "$REPO" --label "agent-mode" --title "Azure Deployment" --body-file /tmp/body.md
+          gh issue create --repo "$REPO" --label "copilot-cli" --title "Azure Deployment" --body-file /tmp/body.md
 
-      - name: Issue 6 — Code Review and Performance
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          cat > /tmp/body.md <<'EOF'
-          ## Task
-          Perform a code review of the full application (targeting the live deployed app):
-
-          1. **Code quality review** — focus on best practices, error handling, accessibility
-          2. **Performance review** — focus on asset optimization, render-blocking resources, caching
-
-          The findings from each review should be filed as four new GitHub issues using `gh issue create`, **in this exact order so that "Deploy latest version to Azure" is the last issue created**:
-          1. Fix: missing alt attributes and semantic HTML
-          2. Fix: render-blocking CSS and missing meta tags
-          3. Write and run unit tests for the application — **keep this lean and demo-friendly**: a small handful (2–5) of quick smoke tests covering one happy path per page (e.g., page title renders, nav buttons present). No coverage gates, no heavy framework setup, target total runtime under ~30s. This is for demo purposes only, not production-grade testing.
-          4. Deploy latest version to Azure (trigger the existing workflow with `gh workflow run "Azure Static Web Apps CI/CD"`) — **must be filed last**
-
-          After filing the issues, generate a `suggested_improvements.md` report in the repo root summarizing all findings and recommendations from the review.
-
-          ## Assigned to
-          Copilot CLI — review the codebase, file the issues, generate the report.
-
-          ## Note
-          This step happens after the **Azure Deployment** issue. The reviews target the live deployed app.
-
-          ## Completion
-          Once the issues are created, the report is generated, and changes are committed and pushed, close this issue from the GitHub UI or with `gh issue close <this-issue-number>`.
-          EOF
-          sed -i 's/^          //' /tmp/body.md
-          gh issue create --repo "$REPO" --label "copilot-cli" --title "Code Review and Performance" --body-file /tmp/body.md
-
-      - name: Issue 7 — Clean Up Azure Resources
+      - name: Issue 9 — Clean Up Azure Resources
         if: steps.check.outputs.skip == 'false'
         run: |
           cat > /tmp/body.md <<'EOF'
@@ -202,7 +247,7 @@ jobs:
           1. Go to the [Azure Portal](https://portal.azure.com)
           2. Navigate to the **Resource Group** created for this demo
           3. Click **Delete resource group** and confirm
-          4. Verify the Static Web App and any associated resources are fully removed
+          4. Verify the Container App, Container Apps environment, Container Registry, and any associated resources are fully removed
 
           > ⚠️ Only do this after the demo is fully complete and you no longer need the live URL.
           EOF

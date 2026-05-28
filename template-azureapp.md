@@ -1,17 +1,17 @@
 # template-azureapp.md
 
-Purpose: Reusable template to accelerate resolving Issue #1 (Azure Static Web App Setup) without modifying any repository files or GitHub workflow files.
+Purpose: Reusable template to accelerate resolving Issue #1 (Azure Container Apps Setup) without modifying unrelated repository files.
 
 ## Scope Guardrails
 
-- Do not edit any file under .github/workflows.
-- Only perform infrastructure setup, secret setup, workflow trigger, verification, and `azure_resource.md` update.
+- Do not edit content pages while completing Issue #1.
+- Focus only on Azure infrastructure setup, secret setup, workflow trigger, verification, and `azure_resource.md` update.
 
 ## Reusable Prompt (Copy/Paste)
 
 Use this exact prompt when starting execution:
 
-"address issue #1 Azure Static Web App Setup (Pre-demo) based on template-azureapp.md"
+"address issue #1 Azure Container Apps Setup (Pre-demo) based on template-azureapp.md"
 
 When executing, follow this template strictly and avoid unrelated changes.
 
@@ -20,30 +20,29 @@ When executing, follow this template strictly and avoid unrelated changes.
 Replace placeholders before running commands.
 
 - [SUBSCRIPTION_ID]: Azure subscription ID
-- [SUBSCRIPTION_NAME]: Optional friendly name
-- [RESOURCE_GROUP]: Resource group name (example: rg-live-demo-ghcp)
+- [RESOURCE_GROUP]: Resource group name (example: rg-ghcp-demo)
 - [LOCATION]: Azure region (example: swedencentral)
-- [STATIC_WEB_APP_NAME]: Static Web App name (example: live-demo-dryrun-swa)
-- [GITHUB_OWNER]: GitHub org/user (example: mburakunuvar)
-- [GITHUB_REPO]: Repository name (example: live-demo-dryrun)
-- [BRANCH]: Git branch (default: main)
-- [WORKFLOW_NAME]: Azure Static Web Apps CI/CD
-- [LIVE_URL]: Expected site URL after deployment (example: https://<hostname>.azurestaticapps.net)
+- [ACR_NAME]: Azure Container Registry name (example: ghcpdemoregistry)
+- [CONTAINERAPPS_ENV]: Container Apps environment name (example: ghcp-demo-env)
+- [CONTAINER_APP_NAME]: Container App name (example: ghcp-demo-app)
+- [GITHUB_OWNER]: GitHub org/user
+- [GITHUB_REPO]: Repository name
+- [WORKFLOW_NAME]: Azure Container Apps CI/CD
 
 ## Runbook (Issue #1)
 
-1. Create or confirm resource group.
-2. Create Azure Static Web App.
-3. Retrieve deployment token from Azure.
-4. Add GitHub Actions secret named AZURE_STATIC_WEB_APPS_API_TOKEN.
+1. Create or confirm the resource group.
+2. Create Azure Container Registry (Basic SKU).
+3. Create Azure Container Apps environment.
+4. Configure repository secrets needed by the workflow.
 5. Trigger workflow [WORKFLOW_NAME].
 6. Wait for workflow completion and confirm success.
 7. Verify the live URL responds with HTTP 200.
-8. Close Issue #1 with evidence.
+8. Update `azure_resource.md` with actual values.
 
 ## Command Checklist (CLI)
 
-Run from anywhere with az and gh authenticated.
+Run from anywhere with `az` and `gh` authenticated.
 
 ```bash
 # 0) Optional: set subscription context
@@ -54,71 +53,108 @@ az group create \
   --name "[RESOURCE_GROUP]" \
   --location "[LOCATION]"
 
-# 2) Create Static Web App (idempotent if already exists with same name)
-az staticwebapp create \
-  --name "[STATIC_WEB_APP_NAME]" \
+# 2) Create ACR (idempotent with same name)
+az acr create \
+  --name "[ACR_NAME]" \
   --resource-group "[RESOURCE_GROUP]" \
-  --location "[LOCATION]" \
-  --sku Free \
-  --query "{name:name,defaultHostname:defaultHostname,resourceGroup:resourceGroup}" \
-  -o json
+  --sku Basic
 
-# 3) Get deployment token
-TOKEN=$(az staticwebapp secrets list \
-  --name "[STATIC_WEB_APP_NAME]" \
+# 3) Create Container Apps environment
+az containerapp env create \
+  --name "[CONTAINERAPPS_ENV]" \
   --resource-group "[RESOURCE_GROUP]" \
-  --query "properties.apiKey" -o tsv)
+  --location "[LOCATION]"
 
-# 4) Set GitHub repo secret
-printf "%s" "$TOKEN" | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN \
+# 4) Collect ACR values
+ACR_LOGIN_SERVER=$(az acr show \
+  --name "[ACR_NAME]" \
+  --resource-group "[RESOURCE_GROUP]" \
+  --query loginServer -o tsv)
+
+ACR_USERNAME=$(az acr credential show \
+  --name "[ACR_NAME]" \
+  --resource-group "[RESOURCE_GROUP]" \
+  --query username -o tsv)
+
+ACR_PASSWORD=$(az acr credential show \
+  --name "[ACR_NAME]" \
+  --resource-group "[RESOURCE_GROUP]" \
+  --query passwords[0].value -o tsv)
+
+# 5) Set GitHub repo secrets
+printf "%s" "<AZURE_CLIENT_ID>" | gh secret set AZURE_CLIENT_ID \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "<AZURE_TENANT_ID>" | gh secret set AZURE_TENANT_ID \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "<AZURE_SUBSCRIPTION_ID>" | gh secret set AZURE_SUBSCRIPTION_ID \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "<AZURE_CLIENT_SECRET>" | gh secret set AZURE_CLIENT_SECRET \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "$ACR_LOGIN_SERVER" | gh secret set ACR_LOGIN_SERVER \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "$ACR_USERNAME" | gh secret set ACR_USERNAME \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "$ACR_PASSWORD" | gh secret set ACR_PASSWORD \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "[RESOURCE_GROUP]" | gh secret set AZURE_RESOURCE_GROUP \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "[CONTAINER_APP_NAME]" | gh secret set AZURE_CONTAINERAPP_NAME \
+  --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
+printf "%s" "[CONTAINERAPPS_ENV]" | gh secret set AZURE_CONTAINERAPPS_ENVIRONMENT \
   --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
 
-# 5) Trigger deployment workflow
+# 6) Trigger deployment workflow
 gh workflow run "[WORKFLOW_NAME]" \
   --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
 
-# 6) Get latest run ID for workflow
+# 7) Get latest run ID
 RUN_ID=$(gh run list \
   --repo "[GITHUB_OWNER]/[GITHUB_REPO]" \
   --workflow "[WORKFLOW_NAME]" \
   --limit 1 --json databaseId --jq '.[0].databaseId')
 
-# 7) Wait until complete
+# 8) Wait until complete
 gh run watch "$RUN_ID" \
   --repo "[GITHUB_OWNER]/[GITHUB_REPO]" \
   --interval 10
 
-# 8) Show final run status
+# 9) Show final run status
 gh run view "$RUN_ID" \
   --repo "[GITHUB_OWNER]/[GITHUB_REPO]" \
   --json conclusion,status,url,displayTitle,startedAt,updatedAt
 
-# 9) Verify live URL is accessible
-curl -I -L --max-time 20 "[LIVE_URL]"
+# 10) Verify live URL is accessible
+FQDN=$(az containerapp show \
+  --name "[CONTAINER_APP_NAME]" \
+  --resource-group "[RESOURCE_GROUP]" \
+  --query "properties.configuration.ingress.fqdn" -o tsv)
+
+curl -I -L --max-time 20 "https://$FQDN"
 ```
 
 ## Completion Evidence (Paste Into Issue #1 Comment)
 
-- Azure Static Web App: [STATIC_WEB_APP_NAME]
+- Container App: [CONTAINER_APP_NAME]
+- Container Apps Environment: [CONTAINERAPPS_ENV]
+- ACR Login Server: [ACR_LOGIN_SERVER]
 - Resource Group: [RESOURCE_GROUP]
-- Live URL: [LIVE_URL]
-- Secret configured: AZURE_STATIC_WEB_APPS_API_TOKEN
+- Live URL: https://[FQDN]
 - Workflow: [WORKFLOW_NAME]
 - Workflow run URL: [WORKFLOW_RUN_URL]
-- Verification: HTTP 200 received from [LIVE_URL]
+- Verification: HTTP 200 received from https://[FQDN]
 
 ## Issue Closure Command
 
 ```bash
 gh issue close 1 \
   --repo "[GITHUB_OWNER]/[GITHUB_REPO]" \
-  --comment "Closing as completed. Azure Static Web App is deployed, workflow succeeded, and live URL is reachable."
+  --comment "Closing as completed. Azure Container App deployment succeeded and the live URL is reachable."
 ```
 
 ## Quick Sanity Checks
 
 ```bash
-# Confirm secret exists
+# Confirm secrets exist
 gh secret list --repo "[GITHUB_OWNER]/[GITHUB_REPO]"
 
 # Confirm workflow exists

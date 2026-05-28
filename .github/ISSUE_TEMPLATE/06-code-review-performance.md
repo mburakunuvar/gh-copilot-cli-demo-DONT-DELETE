@@ -15,7 +15,7 @@ The findings from each review should be filed as four new GitHub issues using `g
 1. Fix: missing alt attributes and semantic HTML
 2. Fix: render-blocking CSS and missing meta tags
 3. Write and run unit tests for the application
-4. Deploy latest version to Azure (trigger the existing workflow with `gh workflow run "Azure Static Web Apps CI/CD"`) — **must be filed last**
+4. Deploy latest version to Azure (trigger the existing workflow with `gh workflow run "Azure Container Apps CI/CD"`) — **must be filed last**
 
 After filing the issues, generate a `suggested_improvements.md` report in the repo root summarizing all findings and recommendations from the review.
 
